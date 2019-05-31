@@ -1,0 +1,271 @@
+// $Id: params.hoc,v 1.191 2011/08/17 14:12:24 billl Exp $
+
+//* batch params
+jrsvn_INTF6=1e3
+jrsvd_INTF6=2e4
+
+//* general params
+declare("mytstop",2e3)
+tstop = 1000
+v_init=1000 // so keep v's as set randomly
+
+//* ARTC params
+mg_INTF6=1.6
+EAM_INTF6=65 // these are deviations above RMP
+ENM_INTF6=90
+EGA_INTF6=-15
+seadsetting_INTF6 = 2 // fixed inter-cell weights
+
+//* Declarations
+
+dosetexvals=name_declared("wmatex")==0 // whether to set values in wmatex,ratex
+
+sprint(tstr,"d[%d][%d]",CTYPi,STYPi)
+declare("wmatex",tstr,"ratex",tstr) // weights,avg. rate of external inputs
+
+declare("fih","o[1]","nstim","o[1]")
+vseed_stats(223481)
+rdm.MCellRan4(seed_stats)
+
+declare("vsgrpp",new Vector(CTYPi)) //% X 100 of cells of a type to stim, used in stim,sgrcells
+declare("vsgrsidx",new Vector(CTYPi)) //startind index of cell to stim when using topstim
+declare("sgrdur",tstop) //duration of stim
+declare("inputseed",1234)
+declare("sgrhzE",300,"sgrhzI",125,"sgrhzNM",50,"sgron",1,"sgrdel",0)
+declare("sgrhzdel",0.2)//variance in sgrhz for an INTF6
+declare("EXGain",15) // gain for external inputs
+declare("lcstim",new List()) // list of CSTIM objects
+declare("nqwmex",new NQS("ct","sy","w","rate")) // NQS passed to CSTIM init
+{sprint(tstr,"d[%d]",numcols) declare("EIBalance",tstr)} // whether to balance rate of external E/I inputs
+declare("usens",1) // whether to use NetStims in CSTIM
+
+SCAHP=SCTH=1
+
+//* shock-related params
+sprint(tstr,"d[%d][%d][%d]",numcols,CTYPi,STYPi)
+declare("wshock",tstr,"durshock",tstr,"prctshock",tstr,"nshock",tstr,"isishock",tstr,"startshock",tstr)
+
+//* setwmatex - set weights of external inputs to INTF6s
+proc setwmatex () {  local ct,sy
+  if(dosetexvals) {
+    for ct=0,CTYPi-1 for sy=0,STYPi-1 wmatex[ct][sy]=0
+    for ct=0,CTYPi-1 {
+      ratex[ct][AM2]=sgrhzE
+      ratex[ct][NM2]=sgrhzNM
+      ratex[ct][GA2]=ratex[ct][GA]=sgrhzI
+      if(IsLTS(ct)) {
+        wmatex[ct][AM2] = 0.2
+        wmatex[ct][NM2] = 0.025
+        wmatex[ct][GA]=wmatex[ct][GA2]=0.125
+      } else {
+        wmatex[ct][NM2] = 0.05   
+        wmatex[ct][AM2] = 0.25 
+        wmatex[ct][GA]=wmatex[ct][GA2]=0.125
+      }
+      for sy=0,STYPi-1 wmatex[ct][sy] *= EXGain // apply gain control
+    }    
+  }
+  nqwmex.clear()
+  for ct=0,CTYPi-1 for sy=0,STYPi-1 if(wmatex[ct][sy]) nqwmex.append(ct,sy,wmatex[ct][sy],ratex[ct][sy])
+}
+
+//* RSparams - setup regular spiking excitatory cells
+proc RSparams () { local ii,jj localobj xo,co
+  for ltr(co,lcol) for case(&ii,E2,E4,E5R,E5B,E6) if(co.numc[ii]>0) {
+    for jj=co.ix[ii],co.ixe[ii] { xo=co.ce.o(jj)
+      
+      xo.ahpwt=1
+      xo.tauahp=400
+      xo.RMP= -65
+      xo.VTH= -40 
+      xo.refrac=  50
+      xo.Vblock= -25
+      
+      xo.tauGA  = 10
+      xo.tauGA2 = 20
+      xo.tauAM2 = 20
+      xo.tauNM2 = 300
+      
+      xo.tauRR = 8 
+      xo.RRWght = .75 
+    }
+  }
+}
+
+//* LTSparams - setup low-threshold spiking interneurons
+proc LTSparams () { local ii,jj localobj xo,co
+  for ltr(co,lcol) for case(&ii,I2L,I4L,I5L,I6L) if(co.numc[ii]>0) {
+    for jj=co.ix[ii],co.ixe[ii] { xo=co.ce.o(jj)  
+      xo.ahpwt=0.5
+      xo.refrac= 5
+      xo.tauahp=50
+      xo.Vblock=-10    
+      xo.RMP = -65
+      xo.VTH= -47
+
+      xo.tauGA  = 10
+      xo.tauGA2 = 20
+      xo.tauAM2 = 20
+      xo.tauNM2 = 300
+      
+      xo.tauRR = 1.5
+      xo.RRWght = 0.25
+    }
+  }
+}
+
+//* FSparams - setup fast spiking interneurons
+proc FSparams () { local ii,jj localobj xo,co
+  for ltr(co,lcol) for case(&ii,I2,I2C,I4,I5,I6,I6C) if(co.numc[ii]>0) {
+    for jj=co.ix[ii],co.ixe[ii] { xo=co.ce.o(jj)    
+      xo.ahpwt=0.5
+      xo.refrac= 5
+      xo.tauahp=50
+      xo.Vblock=-10    
+      xo.RMP = -63
+      xo.VTH= -40
+
+      xo.tauGA  = 10
+      xo.tauGA2 = 20
+      xo.tauAM2 = 20
+      xo.tauNM2 = 300
+      
+      xo.tauRR = 1.5
+      xo.RRWght = 0.25
+    }
+  }
+}
+
+//* setNMParams(col,celltype,mg0 factor,maxnmc) 
+proc setNMParams () { local ct,mgf,maxnmc,idx localobj col,ce
+  col=$o1 ce=col.ce ct=$2 mgf=$3 maxnmc=$4
+  for idx=col.ix[ct],col.ixe[ct] {
+    ce.o(idx).mg0 = 3.57 * mgf
+    ce.o(idx).maxnmc = maxnmc
+  }
+}
+
+//* setNMIParams(col[,mg0 factor,maxnmc])
+proc setNMI () { local mgf,maxnmc,ct localobj col
+  col=$o1
+  if(numarg()>1) mgf=$2 else mgf=1 
+  if(numarg()>2) maxnmc=$3 else maxnmc=1
+  for ct=0,CTYPi-1 if(ice(ct)) setNMParams(col,ct,mgf,maxnmc)
+}
+
+//* schizon - turn on schizo params
+proc schizon () { local c,ct
+  for c=0,numcols-1 {
+    setNMI(col[c],0.75,0.75)
+    setNMParams(col[c],E4,1.25,1.25)
+    for case(&ct,E2,E5R,E5B) setNMParams(col[c],ct,0.75,0.9)
+  }
+}
+//* schizon - turn off schizo params
+proc schizoff () { local c,ct
+  for c=0,numcols-1 {
+    setNMI(col[c],1,1)
+    setNMParams(col[c],E4,1,1)
+    for case(&ct,E2,E5R,E5B) setNMParams(col[c],ct,1,1)
+  }
+}
+
+
+proc rewt () {} // nothing needs to be done since copy directly into wd0[][][]
+
+//* setcstim - set external inputs to COLUMNs using CSTIM
+proc setcstim () { local i,seed
+  for i=0,lcol.count-1 {
+    if(dbgcols)seed=inputseed else seed=(i+1)*inputseed
+    lcstim.append(new CSTIM(lcol.o(i),seed,sgrdur,sgrhzdel,EIBalance[i],usens))
+    lcstim.o(lcstim.count-1).setwm(nqwmex)
+    lcstim.o(lcstim.count-1).setspks()
+  }
+  print "set external inputs"
+}
+
+//* clrshock -- clear all shock params and actual shocks
+proc clrshock () { local i,j,k
+  for i=0,numcols-1 for j=0,CTYPi-1 for k=0,STYPi-1 {
+    wshock[i][j][k]=durshock[i][j][k]=prctshock[i][j][k]=nshock[i][j][k]=isishock[i][j][k]=startshock[i][j][k]=0
+  }
+  setshock(1)
+}
+
+//* setshockparms -- setup matrices for shock params used by setshock
+proc setshockparms () { local i,x,tm
+  for i=0,0 {
+    wshock[i][E4][AM2] = 6.25
+    durshock[i][E4][AM2] = 1
+    prctshock[i][E4][AM2] = 80
+    nshock[i][E4][AM2] = 1
+    isishock[i][E4][AM2] = 0
+    startshock[i][E4][AM2] = 50
+  }
+  // clrshock() setshockparms() setshock() time()
+  if (0) for i=0,13 for ctt(&x) if (ice(x)) for case(&tm,300) {
+    wshock[i][x][NM2] = 25
+    durshock[i][x][NM2] = 10
+    prctshock[i][x][NM2] = 1000
+    nshock[i][x][NM2] = 1
+    isishock[i][x][NM2] = 0
+    startshock[i][x][NM2] = tm
+  }
+  if (0) for i=0,3 for case(&x,E2,E5B,E5R,E4,E6) for case(&tm,550) {
+    wshock[i][x][AM2] = 20.25
+    durshock[i][x][AM2] = 1
+    prctshock[i][x][AM2] = 100
+    nshock[i][x][AM2] = 1
+    isishock[i][x][AM2] = 0
+    startshock[i][x][AM2] = tm
+  }
+}
+
+proc setshockp () { local i,x,cty,col,syty,wt,tm,prct
+  cty=$1 col=$2 syty=$3 wt=$4 tm=$5
+  if (argtype(6)==0) prct=$6 else prct=100
+  wshock[col][cty][syty] = wt
+  durshock[col][cty][syty] = 1
+  prctshock[col][cty][syty] = prct
+  nshock[col][cty][syty] = 1
+  isishock[col][cty][syty] = 0
+  startshock[col][cty][syty] = tm
+}
+
+//* setshock([clear vq first]) - set stims to L4 , NB: DEFAULT IS TO CLEAR vq FIRST
+proc setshock () { local clr,i,j,k,l,tt,set
+  if(numarg()>0) clr=$1 else clr=1
+  for i=0,numcols-1 {
+    set=0 // whether setting new spikes
+    if(clr) {col[i].cstim.vq.clear() col[i].ce.o(0).clrvspks()} // clear shocks to this column?
+    for j=0,CTYPi-1 for k=0,STYPi-1 if(wshock[i][j][k]>0 && nshock[i][j][k]>0) {
+      set = 1
+      tt = startshock[i][j][k] // time
+      for l=0,nshock[i][j][k]-1 {
+        col[i].cstim.shock(durshock[i][j][k],prctshock[i][j][k],j,tt,9342*(i+1)*(j+1)*(k+1)*(l+1),k,wshock[i][j][k]) 
+        tt += isishock[i][j][k] // inc by ISI
+      }
+    }
+    if(set) {
+      col[i].cstim.pushspks()
+      print col[i].cstim.vq.size(-1)
+    }
+  }
+}
+
+//* function calls
+
+setwmatex()
+
+{RSparams() LTSparams() FSparams()}
+
+if (!jcn) rjinet() //means no jitcon
+
+if(disinhib) inhiboff()
+
+setcstim() // random inputs from other areas
+
+// how to shock:
+// setup params for shock << timing, weights, bursts, isi, etc.
+// {clrshock() setshockparms() setshock()}
+clrshock()

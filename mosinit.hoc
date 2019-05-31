@@ -1,0 +1,15 @@
+// $Id: batch.hoc,v 1.2 2011/08/17 14:24:12 billl Exp $
+
+load_file("stdgui.hoc")
+load_file("setup.hoc")
+load_file("nrnoc.hoc")
+load_file("init.hoc")
+load_file("nqsnet.hoc")
+load_file("network.hoc")
+load_file("params.hoc")
+load_file("run.hoc")
+load_file("gload.hoc")
+time()
+gg()
+drall()
+panobj.grrtsize()

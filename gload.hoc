@@ -1,0 +1,109 @@
+// $Id: gload.hoc,v 1.16 2011/08/17 15:25:16 billl Exp $
+
+//* setup number of cells setcpercol - set # of cells per column
+double cpercol[CTYPi]
+scale = 4
+E5RNumF=E5BNumF=1
+proc setcpercol () { local i,jj // (/u/samn/vcsim/notebook.dol_1:24562)(notebook.dol_1:24492)
+  cpercol[E2]  = 150 * scale
+  cpercol[E4] =   30 * scale
+  cpercol[E5B] =  int(17 * scale * E5BNumF)
+  cpercol[E5R] =  int(65 * scale * E5RNumF)
+  cpercol[E6] =   60 * scale
+  cpercol[I2L] =  13 * scale
+  cpercol[I2]  =  25 * scale
+  cpercol[I4L] =  14 * scale 
+  cpercol[I4]  =  20 * scale
+  cpercol[I5L] =  13 * scale
+  cpercol[I5]  =  25 * scale
+  cpercol[I6L] =  13 * scale
+  cpercol[I6] =   25 * scale
+  cnt=allcells=icells=ecells=0
+  for ct=0,CTYPi-1 if ((numc[ct]=cpercol[ct])>0) {
+    ix[ct]=cnt ixe[ct]=cnt+numc[ct]-1 cnt+=numc[ct]
+    if(ice(ct))icells+=numc[ct] else ecells+=numc[ct]
+  } else numc[ct]=0
+  allcells=ecells+icells
+}
+setcpercol()
+
+//** pano2nq() reads in from a grvec panobj to an nq
+// nq=pano2nq()
+obfunc pano2nq () { local i,ii localobj st,oq,v1,xo
+  oq=new NQS() st=new String2() v1=new Vector() i=0
+  if (printlist.count>0) {
+    for ({i=0 ii=0};ii<printlist.count-1;ii+=1) { xo=printlist.o(ii)
+      if (strm(xo.name,"SPKS")) {
+        sprint(st.s,"time%s",xo.name) sprint(st.t,"ind_%s",xo.name)
+        oq.resize(st.s,st.t)
+        oq.v[i]=xo.tvec oq.v[i+1]=xo.vec
+        i+=2
+      }
+    }
+  } else for panobj.rvtr(vec,&ii,"SPKS") {
+    sprint(st.s,"time%s",panobj.tstr) sprint(st.t,"ind_%s",panobj.tstr)
+    oq.resize(st.s,panobj.tvec,st.t,vec)
+    i+=1
+  }
+  return oq
+}
+
+//** drlfp() 
+proc drlfp () { local i,ii,beg,end localobj xo
+  clrveclist() end=0 tmplist.remove_all()
+  if (argtype(1)==1) panobj=$o1 
+  if (numarg()==3) {beg=$2 end=$3}
+  ge(0) i=gvmarkflag=0
+  if (printlist.count>0) { for ii=0,printlist.count-1 { xo=printlist.o(ii)
+    if (strm(xo.name,"LFP")) {
+      tmplist.append(new String(xo.name))
+      xo.vec.line(g,0.1,sg(printlist.count-ii+1).x,2)
+    }
+  }
+  } else {
+    for panobj.rvtr(vec,&ii,"LFP") {
+      vec.add(ii*8e3)
+      tmplist.append(new String(panobj.tstr))
+      if (end>0) {
+        savevec(vec.c(beg/0.1,vec.size()-(1000-end)/0.1)) // this is for tstop=1000 and vdt_LFP=0.1
+      } else savevec(vec.c(50/0.1,vec.size-10)) // clip the edges
+    }
+    for ltrb(xo,veclist,&ii) { xo.line(g,0.1,sg(veclist.count-ii+1).x,2)}
+  }
+}
+
+//** mkdrr() draw a graphic
+decim=1e3 // decimate
+proc mkdrr () { local n,i,j,k,ty localobj xq,v1
+  gvmarkflag=1 ty=$1 lne=3 clr+=1 // ge(0) 
+  xq=new NQS("t","ind") xq.verbose=0 v1=new Vector(decim)
+  xq.marksym="O"
+  for ({k=0 i=0 j=nq.m/2};i<nq.m/2;{i+=2 j+=2 k+=1}) for case(&x,i,j) { // print nq.s[x].s,k*1e3
+    xq.v[0]=nq.v[x] xq.v[1]=nq.v[x+1]
+    n=xq.select("ind","[]",ix[ty],ixe[ty])
+    if (n>0) {
+      if (decim>0 && decim<n) {  // decim will give final size for a group
+        v1.resample(xq.out.v[1].c,decim/n) xq.out.v[1].copy(v1)
+        v1.resample(xq.out.v[0].c,decim/n) xq.out.v[0].copy(v1)
+      }
+      xq.out.v[1].add(k*1.5e3) // for scale==2 (2*470)
+      // print i,n,xq.getcol("i").min,xq.getcol("i").max
+      xq.gr("ind","t",0,clr,lne)
+    }
+    k+=1
+  }
+  // drline(100,0,100,col.allcells*7,g,9,9)
+}
+
+proc drall () {
+  if (argtype(1)==1) panobj=$o1
+  {ge(0) clr=0  delnqs(nq) nq=pano2nq() mkdrr(E2) mkdrr(E4) mkdrr(E5B) mkdrr(E5R)}
+  // drline(100,0,100,11e3,1,2,5)
+}
+
+//** svrun()
+proc svrun () { local ii
+  print output_file,comment
+  panobj.pvplist(output_file,comment)
+}
+

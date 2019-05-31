@@ -1,0 +1,16 @@
+// $Id: init.hoc,v 1.22 2010/12/13 18:08:47 samn Exp $
+
+xwindows=1
+show_panel=0
+pwd()
+load_file("grvec.hoc")
+load_file("syncode.hoc")
+load_file("decnqs.hoc")
+load_file("drline.hoc")
+load_file("stats.hoc")
+if (! VECST_INSTALLED) install_vecst()
+if (! INSTALLED_stats) install_stats()
+load_file("nqs_utils.hoc")
+verbose_INTF6=verbose_infot=0
+load_file("col.hoc")
+load_file("gload.hoc")
