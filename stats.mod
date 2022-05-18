@@ -39,11 +39,7 @@ PARAMETER {
 ASSIGNED { seed }
 
 VERBATIM
-#ifdef NRN_VERSION_GTEQ_9_0_
-#include <cfloat>
-#else
 #include <float.h>
-#endif
 #include <sys/time.h>
 
 #include "misc.h"
