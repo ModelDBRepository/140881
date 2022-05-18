@@ -1,12 +1,11 @@
-// $Id: misc.h,v 1.33 2010/06/05 15:32:28 billl Exp $
+// $Id: misc.h,v 1.38 2011/11/02 15:26:48 billl Exp $
 
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h> /* contains LONG_MAX */
 #include <time.h>
-#include <sys/time.h> 
-#include <values.h>
 #include <pthread.h>
+#include <stdint.h>
 
 #if !defined(t)
   #define _pval pval
@@ -47,6 +46,7 @@ typedef struct BVEC {
 #define LG2 0.69314718055994530941723212145818
 #define VRRY 200
 #define ISVEC(_OB__) (strncmp(hoc_object_name(_OB__),"Vector",6)==0)
+#define dmaxuint 4294967295. // for 32 bits
 
 // Andre Fentons cast designations
 typedef	unsigned char	ui1;	/* one byte unsigned integer */
@@ -61,39 +61,25 @@ typedef double		sf8;	/* eight byte signed floating point number */
 extern double ERR,GET,SET,OK,NOP,ALL,NEG,POS,CHK,NOZ,GTH,GTE,LTH,LTE,EQU;
 extern double EQV,EQW,EQX,NEQ,SEQ,RXP,IBE,EBI,IBI,EBE;
 
-extern double *vector_newsize (IvocVect* vv, int n);
 #ifndef NRN_VERSION_GTEQ_8_2_0
-extern double* hoc_pgetarg();
-extern void hoc_notify_iv();
-extern double hoc_call_func(Symbol*, int narg);
-extern FILE* hoc_obj_file_arg(int narg);
-extern Object** hoc_objgetarg();
-char *gargstr();
-char** hoc_pgargstr();
 extern void vector_resize();
-extern int vector_instance_px();
-extern void* vector_arg();
-extern double* vector_vec();
 extern int vector_buffer_size(void*);
-extern void mcell_ran4_init(unsigned int *idum);
-extern int nrn_mlh_gsort(double* vec, int* base_ptr, int total_elems, int (*cmp)(double, double));
-extern int ivoc_list_count(Object*);
-extern int hoc_is_double_arg(int narg);
-extern int hoc_is_str_arg(int narg);
-extern int hoc_is_object_arg(int narg);
-extern int hoc_is_pdouble_arg(int narg);
-extern Symbol *hoc_lookup(const char*);
-extern Point_process* ob2pntproc(Object*);
-
-extern char* hoc_object_name(Object*);
-extern double nrn_event_queue_stats(double*);
-#endif
-extern double mcell_ran4(unsigned int* idum,double* ran_vec,unsigned int n,double range);
-extern void cvode_fadvance(double);
-extern Object* ivoc_list_item(Object*, int);
-extern void clear_event_queue();
+extern FILE* hoc_obj_file_arg(int narg);
 extern Symbol *hoc_get_symbol(char *);
-extern unsigned int hashseed2 (int na, double* x);
+extern void mcell_ran4_init(uint32_t idum);
+extern int hoc_is_tempobj_arg(int narg);
+Object* ivoc_list_item(Object*, int);
+#endif
+double *list_vector_resize(Object *ob, int i, int sz);
+int list_vector_px(Object *ob, int i, double** px);
+extern int list_vector_px2 (Object *ob, int i, double** px, IvocVect** vv);
+extern int list_vector_px3 (Object *ob, int i, double** px, IvocVect** vv);
+extern int list_vector_px4 (Object *ob, int i, double** px, unsigned int n);
+extern int cmpdfn(double a, double b);
+extern double *vector_newsize (IvocVect* vv, int n);
+extern int IsList (Object* p);
+int uniq2 (int n, double *x, double *y, double *z);
+
 extern unsigned int  dcrsz;
 extern double       *dcr;
 extern double       *dcrset(int);
@@ -104,18 +90,31 @@ extern unsigned int  iscrsz;
 extern int *iscr;
 extern int *iscrset(int);
 extern double BVBASE;
+extern double* hoc_pgetarg();
+extern void hoc_notify_iv();
+extern double hoc_call_func(Symbol*, int narg);
+extern Object** hoc_objgetarg();
+char *gargstr();
+char** hoc_pgargstr();
+extern int vector_instance_px();
+extern void* vector_arg();
+extern double* vector_vec();
 extern double hoc_epsilon;
 extern int stoprun;
 extern void set_seed();
 extern void dshuffle(double* x,int nx);
-extern void ishuffle(int* x,int nx);
-extern unsigned int valseed;
-extern int list_vector_px2 (Object *ob, int i, double** px, IvocVect** vv);
-extern int list_vector_px3 (Object *ob, int i, double** px, IvocVect** vv);
-extern int cmpdfn(double a, double b);
+extern int nrn_mlh_gsort();
+extern int ivoc_list_count(Object*);
+extern int hoc_is_double_arg(int narg);
+extern int hoc_is_str_arg(int narg);
+extern int hoc_is_object_arg(int narg);
+extern int hoc_is_pdouble_arg(int narg);
+extern Symbol *hoc_lookup(const char*);
+extern Point_process* ob2pntproc(Object*);
+
+extern char* hoc_object_name(Object*);
+extern int cmpdfn();
 extern int openvec(int, double **);
-int list_vector_px(Object *ob, int i, double** px);
-double *list_vector_resize(Object *ob, int i, int sz);
 static void hxe() { hoc_execerror("",0); }
 extern void FreeListVec(ListVec** pp);
 extern ListVec* AllocListVec(Object* p);
@@ -123,6 +122,8 @@ extern ListVec* AllocILV(Object*, int, double *);
 void FillListVec(ListVec* p,double dval);
 void ListVecResize(ListVec* p,int newsz);
 extern short *nrn_artcell_qindex_;
+extern double nrn_event_queue_stats(double*);
+extern void clear_event_queue();
 
 static double sc[6];
 static FILE*  testout;
@@ -138,3 +139,4 @@ extern double ismono1 (double *x, int n, int flag);
 double kcorfast(double* input1, double* input2, double* i1d , double* i2d,int n,double* ps);
 double Rktau (double* x, double* y, int n); // R version
 double kcorfast (double* input1, double* input2, double* i1d , double* i2d,int n,double* ps);
+unsigned int hashseed2 (int na, double* x);
