@@ -389,7 +389,8 @@ unsigned int GetDVIDSeedVal(unsigned int id) {
   } else { 
     if (seadsetting==2) printf("Warning: GetDVIDSeedVal called with wt rand turned off\n");
     x[0]=(double)id; x[1]=seaddvioff;
-    sead=hashseed2(2,x);
+    /* the cast is trying to preserve (probably buggy) C behaviour in C++ */
+    sead=hashseed2(2,(double*)&x);
   }
   return sead;
 }
@@ -527,7 +528,8 @@ ENDVERBATIM
           sead=(unsigned int)(floor(_lflag)*ip->id*seedstep); // all integers
         } else { // hash on presynaptic id+FOFFSET,poid,seedstep
           hsh[0]=floor(_lflag); hsh[1]=(double)ip->id; hsh[2]=seedstep;
-          sead=hashseed2(3,hsh); // hsh[] is just scratch pad
+          /* the cast is trying to preserve (probably buggy) C behaviour in C++ */
+          sead=hashseed2(3,(double*)&hsh); // hsh[] is just scratch pad
         }
         mcell_ran4(&sead, &_args[sy], 2, 1.);
         for (ii=sy;ii<sy+2;ii++) { // scale appropriately; 
@@ -1315,7 +1317,8 @@ FUNCTION getdvi () {
               sead=(unsigned int)(FOFFSET+ip->id)*qp->id*seedstep; 
             } else { // hashed sead setting
               hsh[0]=(double)(FOFFSET+ip->id); hsh[1]=(double)(qp->id); hsh[2]=seedstep;
-              sead=hashseed2(3,hsh); 
+              /* the cast is trying to preserve (probably buggy) C behaviour in C++ */
+              sead=hashseed2(3,(double*)&hsh);
             }
             mcell_ran4(&sead, y, 2, 1.);
             for(ii=0;ii<2;ii++) {
@@ -1562,6 +1565,7 @@ FUNCTION setdviv () {
   nprv=vector_arg_px(1, &prv);
   i=vector_arg_px(2, &pov);
   j=vector_arg_px(3, &dlv);
+  /* probably meant to be = */
   s-0x0;
   if(ifarg(4)) { s=(char*)calloc((l=vector_arg_px(4,&ds)),sizeof(char)); for(k=0;k<l;k++) s[k]=ds[k]; k=0;}
   if (nprv!=i || i!=j) {printf("intf:setdviv ERRA: %d %d %d\n",nprv,i,j); hxe();}
@@ -2630,11 +2634,12 @@ PROCEDURE trvsp ()
 {
   VERBATIM 
   int i, flag; 
-  double ind, t0;
+  double ind, local_t0;
   ip=IDP; pg=ip->pg;
   flag=(int) *getarg(1);
   if (subsvint==0.) {printf("trvsp"); return(0.);}
-  ind=pg->isp[0]; t0=pg->vsp[0];
+  ind = pg->isp[0];
+  local_t0 = pg->vsp[0];
   if (flag==1) {
     for (i=0; i<pg->vspn; i++) {
       if (pg->isp[i]!=ind) {
@@ -2646,11 +2651,12 @@ PROCEDURE trvsp ()
   } else if (flag==2) {
     for (i=0; i<pg->vspn; i++) {
       if (pg->isp[i]!=ind) {
-        pg->vsp[i-1]=t0+subsvint;
-        ind=pg->isp[i]; t0=pg->vsp[i];
+        pg->vsp[i-1] = local_t0 + subsvint;
+        ind = pg->isp[i];
+        local_t0 = pg->vsp[i];
       }
     }
-    pg->vsp[pg->vspn-1]=t0+subsvint;
+    pg->vsp[pg->vspn-1] = local_t0 + subsvint;
   } else {printf("trvsp flag %d not recognized\n",flag); hxe();}
   ENDVERBATIM
 }

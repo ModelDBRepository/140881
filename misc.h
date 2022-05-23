@@ -53,22 +53,47 @@ typedef	unsigned char	ui1;	/* one byte unsigned integer */
 typedef	char		si1;	/* one byte signed integer */
 typedef unsigned short	ui2;	/* two byte unsigned integer */
 typedef short		si2;	/* two byte signed integer */
-typedef unsigned int	ui4;	/* four byte unsigned integer */ 
-typedef int		si4;	/* four byte signed integer */ 
-typedef float		sf4;	/* four byte signed floating point number */ 
-typedef double		sf8;	/* eight byte signed floating point number */ 
+typedef unsigned int	ui4;	/* four byte unsigned integer */
+typedef int		si4;	/* four byte signed integer */
+typedef float		sf4;	/* four byte signed floating point number */
+typedef double		sf8;	/* eight byte signed floating point number */
 
 extern double ERR,GET,SET,OK,NOP,ALL,NEG,POS,CHK,NOZ,GTH,GTE,LTH,LTE,EQU;
 extern double EQV,EQW,EQX,NEQ,SEQ,RXP,IBE,EBI,IBI,EBE;
 
 #ifndef NRN_VERSION_GTEQ_8_2_0
+extern void cvode_fadvance(double);
 extern void vector_resize();
 extern int vector_buffer_size(void*);
 extern FILE* hoc_obj_file_arg(int narg);
 extern Symbol *hoc_get_symbol(char *);
 extern void mcell_ran4_init(uint32_t idum);
+extern double mcell_ran4(unsigned int* idum,double* ran_vec,unsigned int n,double range);
 extern int hoc_is_tempobj_arg(int narg);
 Object* ivoc_list_item(Object*, int);
+extern double* hoc_pgetarg();
+extern void hoc_notify_iv();
+extern double hoc_call_func(Symbol*, int narg);
+extern Object** hoc_objgetarg();
+char *gargstr();
+char** hoc_pgargstr();
+extern int vector_instance_px();
+extern void* vector_arg();
+extern double* vector_vec();
+extern double hoc_epsilon;
+extern int stoprun;
+extern void set_seed();
+extern int nrn_mlh_gsort();
+extern int ivoc_list_count(Object*);
+extern int hoc_is_double_arg(int narg);
+extern int hoc_is_str_arg(int narg);
+extern int hoc_is_object_arg(int narg);
+extern int hoc_is_pdouble_arg(int narg);
+extern Symbol *hoc_lookup(const char*);
+extern Point_process* ob2pntproc(Object*);
+extern char* hoc_object_name(Object*);
+extern double nrn_event_queue_stats(double*);
+extern void clear_event_queue();
 #endif
 double *list_vector_resize(Object *ob, int i, int sz);
 int list_vector_px(Object *ob, int i, double** px);
@@ -76,6 +101,7 @@ extern int list_vector_px2 (Object *ob, int i, double** px, IvocVect** vv);
 extern int list_vector_px3 (Object *ob, int i, double** px, IvocVect** vv);
 extern int list_vector_px4 (Object *ob, int i, double** px, unsigned int n);
 extern int cmpdfn(double a, double b);
+extern void dshuffle(double* x,int nx);
 extern double *vector_newsize (IvocVect* vv, int n);
 extern int IsList (Object* p);
 int uniq2 (int n, double *x, double *y, double *z);
@@ -90,29 +116,6 @@ extern unsigned int  iscrsz;
 extern int *iscr;
 extern int *iscrset(int);
 extern double BVBASE;
-extern double* hoc_pgetarg();
-extern void hoc_notify_iv();
-extern double hoc_call_func(Symbol*, int narg);
-extern Object** hoc_objgetarg();
-char *gargstr();
-char** hoc_pgargstr();
-extern int vector_instance_px();
-extern void* vector_arg();
-extern double* vector_vec();
-extern double hoc_epsilon;
-extern int stoprun;
-extern void set_seed();
-extern void dshuffle(double* x,int nx);
-extern int nrn_mlh_gsort();
-extern int ivoc_list_count(Object*);
-extern int hoc_is_double_arg(int narg);
-extern int hoc_is_str_arg(int narg);
-extern int hoc_is_object_arg(int narg);
-extern int hoc_is_pdouble_arg(int narg);
-extern Symbol *hoc_lookup(const char*);
-extern Point_process* ob2pntproc(Object*);
-
-extern char* hoc_object_name(Object*);
 extern int cmpdfn();
 extern int openvec(int, double **);
 static void hxe() { hoc_execerror("",0); }
@@ -121,9 +124,6 @@ extern ListVec* AllocListVec(Object* p);
 extern ListVec* AllocILV(Object*, int, double *);
 void FillListVec(ListVec* p,double dval);
 void ListVecResize(ListVec* p,int newsz);
-extern short *nrn_artcell_qindex_;
-extern double nrn_event_queue_stats(double*);
-extern void clear_event_queue();
 
 static double sc[6];
 static FILE*  testout;
