@@ -1562,8 +1562,7 @@ FUNCTION setdviv () {
   nprv=vector_arg_px(1, &prv);
   i=vector_arg_px(2, &pov);
   j=vector_arg_px(3, &dlv);
-  /* probably meant to be = */
-  s-0x0;
+  s=0x0;
   if(ifarg(4)) { s=(char*)calloc((l=vector_arg_px(4,&ds)),sizeof(char)); for(k=0;k<l;k++) s[k]=ds[k]; k=0;}
   if (nprv!=i || i!=j) {printf("intf:setdviv ERRA: %d %d %d\n",nprv,i,j); hxe();}
   // start by counting the prids so will know the size that we need for realloc()
