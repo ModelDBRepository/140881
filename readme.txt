@@ -20,4 +20,4 @@ Changelog
 ---------
 202205: Updated MOD files to contain valid C++ and be compatible with the upcoming
         versions 8.2 and 9.0 of NEURON. Updated to use post ~2011 signature of
-        mcell_ran4_init function.
+        mcell_ran4_init functionand fix hashseed2 argument.
