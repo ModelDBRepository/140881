@@ -69,6 +69,7 @@ extern FILE* hoc_obj_file_arg(int narg);
 extern Symbol *hoc_get_symbol(char *);
 extern void mcell_ran4_init(uint32_t idum);
 extern double mcell_ran4(unsigned int* idum,double* ran_vec,unsigned int n,double range);
+extern int hoc_is_tempobj(int narg);
 extern int hoc_is_tempobj_arg(int narg);
 Object* ivoc_list_item(Object*, int);
 extern double* hoc_pgetarg();
