@@ -15,3 +15,9 @@ Reference:
  Neocortical simulation for epilepsy surgery guidance: Localization and intervention,
  by William W. Lytton, Samuel A. Neymotin, Jason C. Wester, and Diego Contreras
  in Computational Surgery and Dual Training, Springer, 2011
+
+Changelog
+---------
+202205: Updated MOD files to contain valid C++ and be compatible with the upcoming
+        versions 8.2 and 9.0 of NEURON. Updated to use post ~2011 signature of
+        mcell_ran4_init functionand fix hashseed2 argument.
