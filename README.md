@@ -17,6 +17,7 @@ in *Computational Surgery and Dual Training,* Springer, 2011
 Changelog  
 ---------  
 202205: Updated MOD files to contain valid C++ and be compatible with the upcoming versions 8.2 and 9.0 of NEURON. Updated to use post ~2011 signature of mcell_ran4_init function and fix hashseed2 argument.  
+
 202304: Updated MOD files for compatibility with the new data structures in the upcoming NEURON 9.0.
 
-2025-06-20: Converted README to Markdown.
+20250620: Converted README to Markdown.
